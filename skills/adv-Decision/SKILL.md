@@ -48,7 +48,7 @@ on what the workflow returns.
 ```
 PLUGIN_ROOT = ${CLAUDE_PLUGIN_ROOT}
 MEMORY_DIR  = ${user_config.ADVISORS_MEMORY_DIR}
-OUTPUT_DIR  = {MEMORY_DIR}/Вердикты/Решения
+OUTPUT_DIR  = {MEMORY_DIR}/Решения
 JOURNAL     = {MEMORY_DIR}/Журнал решений.md
 RUN_LOG     = {MEMORY_DIR}/Журнал советов.md
 WORK_DIR    = {MEMORY_DIR}/_runs/decision-{QUERY_SLUG}
