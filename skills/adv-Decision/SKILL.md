@@ -9,7 +9,7 @@ allowed-tools:
   - AskUserQuestion
   - Workflow
 model: opus
-effort: xhigh
+effort: high
 description: |
   Council orchestrator for hard decisions. Runs 5 parallel lens-advisors plus 3
   structural roles, adversarially cross-verifies their verdicts, then a validator
