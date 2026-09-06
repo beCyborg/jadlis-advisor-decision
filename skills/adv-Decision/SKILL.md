@@ -54,6 +54,11 @@ RUN_LOG     = {MEMORY_DIR}/Журнал советов.md
 WORK_DIR    = {MEMORY_DIR}/_runs/decision-{QUERY_SLUG}
 ```
 
+> [!tip] Before the run and before applying edits
+> Read `${CLAUDE_PLUGIN_ROOT}/shared/council-verdict-playbook.md` (on demand): an exhausted
+> session window kills the whole fan-out, fan-out consensus gets refuted more often than it
+> looks, and edits are applied from the verdict only.
+
 Inside protocols, lenses and shared contracts the paths are written as the placeholders
 `{PLUGIN_ROOT}` and `{MEMORY_DIR}`: `${CLAUDE_PLUGIN_ROOT}` and `${user_config.*}` are NOT
 expanded inside files you Read. Substitute the values yourself; never send a literal
