@@ -20,7 +20,7 @@ const QUORUM = 4 // <4 линз → low-quorum (skill покажет верди�
 // Воркер: пиннинг Opus 5 + effort high через субагента advisor-opus.
 // Реестр агентов кэшируется на старте сессии — если субагент создан в текущей сессии,
 // оркестратор может передать workerOpts: { model: 'opus' } как фоллбэк.
-const WORKER_OPTS = A.workerOpts || { agentType: 'advisors:advisor-opus' }
+const WORKER_OPTS = A.workerOpts || { agentType: 'advisor-decision:advisor-opus' }
 const w = extra => Object.assign({}, WORKER_OPTS, extra)
 
 const DEFAULT_LENSES = [

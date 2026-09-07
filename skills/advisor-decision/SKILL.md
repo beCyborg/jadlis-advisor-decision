@@ -1,5 +1,5 @@
 ---
-name: adv-Decision
+name: advisor-decision
 user-invocable: true
 argument-hint: "<the decision you are facing — a choice, a bet, a fork, a 'should I…'>"
 allowed-tools:
@@ -23,7 +23,7 @@ description: |
   advisor-systems (structure & feedback loops), advisor-convex (convexity, ruin,
   skin-in-the-game). Memory = an append-only decision journal in the memory folder
   you point the plugin at when you install it.
-  Invoke via /advisors:adv-Decision followed by the decision.
+  Invoke via /advisor-decision followed by the decision.
   English triggers: how should I decide, decision council, hard decision,
   should I, which option, big bet, irreversible choice, decision audit,
   pre-mortem, weigh options, tradeoff, is this a good decision, fork in the road,
@@ -47,7 +47,7 @@ on what the workflow returns.
 
 ```
 PLUGIN_ROOT = ${CLAUDE_PLUGIN_ROOT}
-MEMORY_DIR  = ${user_config.ADVISORS_MEMORY_DIR}
+MEMORY_DIR  = ${user_config.MEMORY_DIR}
 OUTPUT_DIR  = {MEMORY_DIR}/Решения
 JOURNAL     = {MEMORY_DIR}/Журнал решений.md
 RUN_LOG     = {MEMORY_DIR}/Журнал советов.md
@@ -67,9 +67,9 @@ expanded inside files you Read. Substitute the values yourself; never send a lit
 ## Phase 0.0 — memory gate (runs first, every time)
 
 1. `MEMORY_DIR` empty, or the literal text `${user_config` is visible in it → **stop**:
-   > No memory folder configured. Open `/plugin` → advisors → settings and set
-   > `ADVISORS_MEMORY_DIR` (e.g. `~/advisors-memory`), or reinstall with
-   > `--config ADVISORS_MEMORY_DIR=<path>`. The council will not write verdicts into the
+   > No memory folder configured. Open `/plugin` → advisor-decision → settings and set
+   > `MEMORY_DIR` (e.g. `~/advisors-memory`), or reinstall with
+   > `--config MEMORY_DIR=<path>`. The council will not write verdicts into the
    > current working directory.
 2. Path starts with `~/` → replace `~` with `$HOME` **before any write**.
 3. Unpack the skeleton — idempotent, never overwrites existing files; if the folder is
