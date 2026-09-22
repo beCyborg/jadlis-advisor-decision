@@ -17,9 +17,9 @@ const USER_CONTEXT = A.userContext || 'Контекст не задан (dry-run
 const WORK_DIR = A.workDir || 'adv-decision/.tmp-council-dryrun'
 const QUORUM = 4 // <4 линз → low-quorum (skill покажет вердикты без полного router-синтеза)
 
-// Воркер: пиннинг Opus 5 + effort high через субагента advisor-opus.
+// Воркер: пиннинг Opus 5.5 + effort high через субагента advisor-opus.
 // Реестр агентов кэшируется на старте сессии — если субагент создан в текущей сессии,
-// оркестратор может передать workerOpts: { model: 'opus' } как фоллбэк.
+// оркестратор может передать workerOpts: { model: 'claude-opus-5-5' } как фоллбэк.
 const WORKER_OPTS = A.workerOpts || { agentType: 'advisor-decision:advisor-opus' }
 const w = extra => Object.assign({}, WORKER_OPTS, extra)
 
