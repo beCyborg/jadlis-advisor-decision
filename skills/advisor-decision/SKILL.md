@@ -8,7 +8,7 @@ allowed-tools:
   - Bash
   - AskUserQuestion
   - Workflow
-model: opus
+model: claude-opus-5-5
 effort: high
 description: |
   Council orchestrator for hard decisions. Runs 5 parallel lens-advisors plus 3
