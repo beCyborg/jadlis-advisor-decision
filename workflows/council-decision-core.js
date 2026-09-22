@@ -272,7 +272,7 @@ phase('Cross-verify')
 let claimLedger = []
 let ledgerNotes = ''
 if (lenses.length >= 1) {
-  const ledger = await agent(ledgerPrompt(lensFiles, roleFiles), w({ label: 'cross-verify-ledger', phase: 'Cross-verify', schema: LEDGER_SCHEMA }))
+  const ledger = await agent(ledgerPrompt(lensFiles, roleFiles), w({ label: 'cross-verify-ledger', phase: 'Cross-verify', effort: 'xhigh', schema: LEDGER_SCHEMA }))
   claimLedger = ledger.claims || []
   ledgerNotes = ledger.notes || ''
   const tally = claimLedger.reduce((m, c) => { m[c.verdict] = (m[c.verdict] || 0) + 1; return m }, {})
