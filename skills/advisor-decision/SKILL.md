@@ -72,6 +72,9 @@ expanded inside files you Read. Substitute the values yourself; never send a lit
    > `--config MEMORY_DIR=<path>`. The council will not write verdicts into the
    > current working directory.
 2. Path starts with `~/` → replace `~` with `$HOME` **before any write**.
+   Still not starting with `/` (relative) → make it absolute against the current directory
+   (`$(pwd)/<path>`) and say so: the workflow engines accept only an absolute `workDir` and
+   fail before the first agent otherwise.
 3. Unpack the skeleton — idempotent, never overwrites existing files; if the folder is
    created for the first time, say so and list what appeared in it:
    ```bash

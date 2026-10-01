@@ -7,13 +7,47 @@ export const meta = {
   ],
 }
 
-// ── Параметры (skill передаёт после satisfice-гейта; дефолты — для dry-run) ──
-// args может прийти JSON-строкой (харнесс не парсит нетипизированный параметр) — шим как в full-research-core.js
-const A = (() => { try { return typeof args === 'string' ? JSON.parse(args) : (args || {}) } catch (e) { return {} } })()
+// ── Параметры (skill передаёт после satisfice-гейта; дефолты — только при args.dryRun === true) ──
+// ── Guard: разбор и проверка args — до любого agent(), при сбое не стартует ни один агент ──
+// args может прийти JSON-строкой (харнесс не парсит нетипизированный параметр). Раньше сбой
+// JSON.parse молча давал {}, и прогон целиком шёл на dry-run-дефолтах: кавычки „“ или голая "
+// в значении, resume без args, пропущенный ключ — так сгорало ~2M токенов на тестовых данных.
+// Теперь: строка, которая не парсится, → throw; dry-run-дефолты — ТОЛЬКО при args.dryRun === true;
+// без dryRun обязательные ключи непусты, а пути абсолютные (относительный резолвится от cwd сессии).
+const SCRIPT = 'council-decision-core'
+const REQUIRED_ARGS = ['refinedQuery', 'lenses', 'workDir', 'pluginRoot']
+const ABSOLUTE_ARGS = ['workDir']
+const ARGS_HINT = 'curly quotes „“ or an unescaped \\" inside a value break JSON; pass the same args in full (resume does not inherit args); a deliberate test run needs dryRun: true'
+const argsPreview = v => { let s; try { s = typeof v === 'string' ? v : JSON.stringify(v) } catch (e) { s = String(v) } return String(s).slice(0, 300) }
+const argsKind = v => v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v
+const A = (() => {
+  let v = args
+  if (typeof v === 'string') {
+    try { v = JSON.parse(v) } catch (e) {
+      throw new Error(`${SCRIPT}: args string is not valid JSON (${e.message}); raw, first 300 chars: ${argsPreview(args)}; hint: ${ARGS_HINT}`)
+    }
+  }
+  if (v == null) return {}
+  if (argsKind(v) !== 'object') throw new Error(`${SCRIPT}: args must be an object, got ${argsKind(v)}: ${argsPreview(args)}; hint: ${ARGS_HINT}`)
+  return v
+})()
+const DRY_RUN = A.dryRun === true
+if (!DRY_RUN) {
+  const isEmpty = v => v == null || (typeof v === 'string' && !v.trim()) || (Array.isArray(v) && !v.length)
+  const missing = REQUIRED_ARGS.filter(k => isEmpty(A[k]))
+  if (missing.length) {
+    throw new Error(`${SCRIPT}: missing or empty required args: ${missing.join(', ')}; got ${argsKind(args)}: ${argsPreview(args)}; hint: ${ARGS_HINT}`)
+  }
+  for (const k of ABSOLUTE_ARGS) {
+    if (!String(A[k]).startsWith('/')) throw new Error(`${SCRIPT}: args.${k} must be an absolute path, got "${argsPreview(A[k])}" — a relative path resolves against the session cwd; pass {MEMORY_DIR}/… with ~ expanded to $HOME`)
+  }
+  if (!Array.isArray(A.lenses)) throw new Error(`${SCRIPT}: args.lenses must be a non-empty array, got ${argsKind(A.lenses)}: ${argsPreview(A.lenses)}; hint: ${ARGS_HINT}`)
+}
+// ── конец guard ──
 // Корень плагина: ${CLAUDE_PLUGIN_ROOT} в JS не подставляется — скилл передаёт значением.
 const PLUGIN_ROOT = A.pluginRoot || '.'
 const QUERY = A.refinedQuery || 'Стоит ли уходить из найма, чтобы делать свой продукт фултайм?'
-const USER_CONTEXT = A.userContext || 'Контекст не задан (dry-run). Включи статус-кво «ничего не делать».'
+const USER_CONTEXT = A.userContext || (DRY_RUN ? 'Контекст не задан (dry-run). Включи статус-кво «ничего не делать».' : '(контекст не передан)')
 const WORK_DIR = A.workDir || 'adv-decision/.tmp-council-dryrun'
 const QUORUM = 4 // <4 линз → low-quorum (skill покажет вердикты без полного router-синтеза)
 
@@ -30,7 +64,7 @@ const DEFAULT_LENSES = [
   { slug: 'systems', lensName: 'Systems-thinking lens', skillPath: `${PLUGIN_ROOT}/lenses/advisor-systems` },
   { slug: 'convex', lensName: 'Convexity / ruin / skin-in-the-game lens', skillPath: `${PLUGIN_ROOT}/lenses/advisor-convex` },
 ]
-const LENSES = (Array.isArray(A.lenses) && A.lenses.length) ? A.lenses : DEFAULT_LENSES
+const LENSES = (Array.isArray(A.lenses) && A.lenses.length) ? A.lenses : DEFAULT_LENSES // дефолт — только dryRun (guard выше)
 
 // ── Схемы ──
 const LENS_SCHEMA = {
