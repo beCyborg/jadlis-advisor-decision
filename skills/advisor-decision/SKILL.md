@@ -8,8 +8,6 @@ allowed-tools:
   - Bash
   - AskUserQuestion
   - Workflow
-model: claude-opus-5-5
-effort: high
 description: |
   Council orchestrator for hard decisions. Runs 5 parallel lens-advisors plus 3
   structural roles, adversarially cross-verifies their verdicts, then a validator
@@ -164,6 +162,13 @@ is NOT preloaded). Decision-specific notes:
 
 ## Phase B — INVOKE
 
+**Final agent (personal file).** Before the workflow run
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/final-agent.py"` and take its `finalOpts` field as `FINAL_OPTS`
+(`{model, effort}` or `null`). The file `~/.claude/skills/_shared/final-agent.json` is optional and personal;
+`null` → the ledger agent stays on the default (Opus 5.5 · xhigh). Say it in one Russian line: «Финальный
+агент: claude-fable-5-2 · high (final-agent.json)» or «Финальный агент: по умолчанию, Opus 5.5 · xhigh
+(final-agent.json: <reason>)». An empty answer on the override gets one retry on the default inside the workflow.
+
 ```
 Workflow({
   scriptPath: "${CLAUDE_PLUGIN_ROOT}/workflows/council-decision-core.js",
@@ -172,7 +177,8 @@ Workflow({
     userContext: USER_CONTEXT,
     lenses: <the {slug, lensName, skillPath} array from Phase 2, minus the dropped ones>,
     workDir: WORK_DIR,
-    pluginRoot: PLUGIN_ROOT   // ${CLAUDE_PLUGIN_ROOT} is NOT expanded inside JS — pass by value
+    pluginRoot: PLUGIN_ROOT,  // ${CLAUDE_PLUGIN_ROOT} is NOT expanded inside JS — pass by value
+    finalOpts: FINAL_OPTS     // from final-agent.py, or null — never invent it
   }
 })
 ```

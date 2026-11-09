@@ -57,6 +57,23 @@ const QUORUM = 4 // <4 линз → low-quorum (skill покажет верди�
 const WORKER_OPTS = A.workerOpts || { agentType: 'advisor-decision:advisor-opus' }
 const w = extra => Object.assign({}, WORKER_OPTS, extra)
 
+// Final agent (2026-11-09): args.finalOpts {model, effort} — the skill reads them from the PERSONAL file
+// ~/.claude/skills/_shared/final-agent.json (scripts/final-agent.py). Without it the final agent keeps the
+// default: the worker (Opus 5.5) at effort xhigh. On finalOpts an empty answer or a throw → ONE retry on the
+// default, so a classifier stop or an unavailable model on the override never costs the verdict.
+const FINAL_OPTS = (A.finalOpts && typeof A.finalOpts === 'object' && /^claude-[a-z0-9-]+$/.test(String(A.finalOpts.model || '')) &&
+  ['low', 'medium', 'high', 'xhigh', 'max'].includes(A.finalOpts.effort)) ? { model: A.finalOpts.model, effort: A.finalOpts.effort } : null
+async function finalAgent(prompt, extra) {
+  if (!FINAL_OPTS) return agent(prompt, w(extra))
+  const first = await agent(prompt, w(Object.assign({}, extra, FINAL_OPTS))).catch(e => {
+    log(`${extra.label} (${FINAL_OPTS.model}) упал: ${String((e && e.message) || e).slice(0, 200)}`)
+    return null
+  })
+  if (first) return first
+  log(`${extra.label} на ${FINAL_OPTS.model} не ответил — один повтор на умолчании (Opus 5.5 · ${extra.effort}).`)
+  return agent(prompt, w(Object.assign({}, extra, { label: `${extra.label}→opus-retry` })))
+}
+
 const DEFAULT_LENSES = [
   { slug: 'probabilistic', lensName: 'Judgment-under-uncertainty lens', skillPath: `${PLUGIN_ROOT}/lenses/advisor-probabilistic` },
   { slug: 'process', lensName: 'Decision-process lens', skillPath: `${PLUGIN_ROOT}/lenses/advisor-process` },
@@ -306,7 +323,7 @@ phase('Cross-verify')
 let claimLedger = []
 let ledgerNotes = ''
 if (lenses.length >= 1) {
-  const ledger = await agent(ledgerPrompt(lensFiles, roleFiles), w({ label: 'cross-verify-ledger', phase: 'Cross-verify', effort: 'xhigh', schema: LEDGER_SCHEMA }))
+  const ledger = await finalAgent(ledgerPrompt(lensFiles, roleFiles), { label: 'cross-verify-ledger', phase: 'Cross-verify', effort: 'xhigh', schema: LEDGER_SCHEMA })
   claimLedger = ledger.claims || []
   ledgerNotes = ledger.notes || ''
   const tally = claimLedger.reduce((m, c) => { m[c.verdict] = (m[c.verdict] || 0) + 1; return m }, {})
